@@ -3,22 +3,19 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(express.json());
 
-// CORS simple (à garder si le front est sur un autre domaine)
+// CORS (si front hébergé ailleurs)
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET");
+  res.header("Access-Control-Allow-Methods", "GET, POST");
   res.header("Access-Control-Allow-Headers", "Content-Type");
   next();
 });
 
-/*
-  ============================
-  DONNÉES STATIQUES (MEMORY)
-  ============================
-*/
+/* =========================
+   DONNÉES STATIQUES
+========================= */
 
 const siteInfo = {
   title: "Découvrez la Magie du Maroc"
@@ -60,7 +57,7 @@ const cities = [
     name: "Tanger",
     subtitle: "La Perle du Détroit",
     description:
-      "Tanger relie l’Afrique à l’Europe. Ville cosmopolite et artistique, elle offre une vue exceptionnelle sur le détroit de Gibraltar.",
+      "Tanger relie l’Afrique à l’Europe. Ville cosmopolite et artistique.",
     highlights: [
       "Cap Spartel",
       "Grottes d’Hercule",
@@ -69,56 +66,64 @@ const cities = [
   }
 ];
 
-/*
-  ============================
-  ROUTES API
-  ============================
-*/
+// Stockage mémoire (pas de BDD)
+const reservations = [];
 
-// Health check Azure
+/* =========================
+   ROUTES API
+========================= */
+
+// Health check
 app.get("/", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    message: "API Maroc Tourisme running"
-  });
+  res.json({ status: "API running" });
 });
 
-// GET grand titre
+// GET titre
 app.get("/api/title", (req, res) => {
-  res.status(200).json(siteInfo);
+  res.json(siteInfo);
 });
 
-// GET toutes les villes
+// GET villes
 app.get("/api/cities", (req, res) => {
-  res.status(200).json(cities);
+  res.json(cities);
 });
 
-// GET ville par ID
-app.get("/api/cities/:id", (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const city = cities.find(c => c.id === id);
+// POST réservation
+app.post("/api/reservations", (req, res) => {
+  const { nom, prenom, telephone, ville } = req.body;
 
-  if (!city) {
-    return res.status(404).json({
-      error: "City not found"
+  if (!nom || !prenom || !telephone || !ville) {
+    return res.status(400).json({
+      error: "Tous les champs sont obligatoires"
     });
   }
 
-  res.status(200).json(city);
-});
+  const newReservation = {
+    id: reservations.length + 1,
+    nom,
+    prenom,
+    telephone,
+    ville,
+    createdAt: new Date()
+  };
 
-// Gestion route inconnue
-app.use((req, res) => {
-  res.status(404).json({
-    error: "Route not found"
+  reservations.push(newReservation);
+
+  res.status(201).json({
+    message: "Réservation enregistrée",
+    reservation: newReservation
   });
 });
 
-/*
-  ============================
-  START SERVER
-  ============================
-*/
+// GET toutes les réservations (admin test)
+app.get("/api/reservations", (req, res) => {
+  res.json(reservations);
+});
+
+// 404
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
