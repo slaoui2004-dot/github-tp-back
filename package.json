@@ -1,0 +1,16 @@
+{
+  "name": "maroc-tourisme-backend",
+  "version": "1.0.0",
+  "description": "API REST pour le site Maroc Tourisme",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
