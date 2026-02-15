@@ -3,10 +3,21 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(express.json());
 
+// CORS simple (à garder si le front est sur un autre domaine)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
+
 /*
-  Données statiques (peuvent être remplacées plus tard par une base de données)
+  ============================
+  DONNÉES STATIQUES (MEMORY)
+  ============================
 */
 
 const siteInfo = {
@@ -59,35 +70,55 @@ const cities = [
 ];
 
 /*
-  Routes API REST
+  ============================
+  ROUTES API
+  ============================
 */
 
-// Health check (Azure)
+// Health check Azure
 app.get("/", (req, res) => {
-  res.json({ message: "API Maroc Tourisme is running 🚀" });
+  res.status(200).json({
+    status: "OK",
+    message: "API Maroc Tourisme running"
+  });
 });
 
 // GET grand titre
 app.get("/api/title", (req, res) => {
-  res.json(siteInfo);
+  res.status(200).json(siteInfo);
 });
 
 // GET toutes les villes
 app.get("/api/cities", (req, res) => {
-  res.json(cities);
+  res.status(200).json(cities);
 });
 
 // GET ville par ID
 app.get("/api/cities/:id", (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = parseInt(req.params.id, 10);
   const city = cities.find(c => c.id === id);
 
   if (!city) {
-    return res.status(404).json({ message: "City not found" });
+    return res.status(404).json({
+      error: "City not found"
+    });
   }
 
-  res.json(city);
+  res.status(200).json(city);
 });
+
+// Gestion route inconnue
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Route not found"
+  });
+});
+
+/*
+  ============================
+  START SERVER
+  ============================
+*/
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
